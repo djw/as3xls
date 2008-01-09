@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" xmlns:digitalprimates="http://www.digitalprimates.net/2006/mxml" creationComplete="onCreate()">
+	<mx:Script>
+		<![CDATA[
+			import tests.realLifeSuite.RealLifeSuite;
+			import tests.cdfSuite.CdfSuite;
+			import tests.workbookSuite.WorkbookSuite;
+			import tests.biff8Suite.BIFF8Suite;
+			import tests.biff5Suite.BIFF5Suite;
+			import tests.biff4Suite.BIFF4Suite;
+			import tests.utilsSuite.UtilsSuite;
+			import tests.utilsSuite.tests.FormatterCase;
+			import tests.biff2Suite.BIFF2Suite;
+			import tests.biff3Suite.BIFF3Suite;
+			private function onCreate():void {
+				var tests:Array = [
+									new RealLifeSuite(),
+									new BIFF2Suite(), 
+									new BIFF3Suite(), 
+									new BIFF4Suite(), 
+									new BIFF5Suite(),
+									new BIFF8Suite(), 
+									new WorkbookSuite(), 
+									new CdfSuite(),
+									new UtilsSuite()
+									];
+				tr.startTests(tests);
+			}
+		]]>
+	</mx:Script>
+	
+	<digitalprimates:TestRunner id="tr">
+		
+	</digitalprimates:TestRunner>
+	
+	<digitalprimates:TestResultDisplay width="100%" height="100%">
+		
+	</digitalprimates:TestResultDisplay>
+</mx:WindowedApplication>

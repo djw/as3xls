@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" viewSourceURL="srcview/index.html">
+	<mx:DataGrid id="grid" left="10" right="10" top="38" bottom="10" dataProvider="{xls.sheets.getItemAt(sheetList.selectedIndex).values}">
+
+	</mx:DataGrid>
+	<mx:ApplicationControlBar dock="true">
+		<mx:Button label="Open Spreadsheet..." click="onBrowse()"/>
+		<mx:ProgressBar id="prog" labelPlacement="center" width="100%" height="100%" label="" mode="manual"/>
+	</mx:ApplicationControlBar>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.as3xls.xls.Sheet;
+			import mx.utils.Base64Decoder;
+			import flash.utils.describeType;
+			import com.as3xls.xls.ExcelFile;
+			import flash.utils.getQualifiedClassName;
+			private var req:URLRequest;
+			private var file:FileReference;
+			private var ldr:URLLoader;
+		
+			private static const UPLOAD_URL:String = "roundtrip.php";
+		
+			[Bindable] private var xls:ExcelFile;
+		
+			private function onBrowse():void {
+				req = new URLRequest();
+				req.url = UPLOAD_URL;
+				file = new FileReference();
+				
+				file.addEventListener(Event.SELECT, onSelect);	
+				file.addEventListener(ProgressEvent.PROGRESS, onProgress);
+				file.addEventListener(Event.COMPLETE, onComplete);
+				file.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, onDone);
+				
+				file.browse();
+			}
+			
+			private function onSelect(event:Event):void {
+	        	var file:FileReference = FileReference(event.target);
+	        	file.upload(req, "file");
+	        	prog.indeterminate = true;
+	        }
+	        
+	        private function onProgress(event:ProgressEvent):void {
+	        	prog.label = "Uploading...";
+	        	prog.minimum = 0;
+	        	prog.maximum = event.bytesTotal;
+	        	prog.setProgress(event.bytesLoaded, event.bytesTotal);
+	        }
+	        
+	        private function onComplete(event:Event):void {
+	        	prog.label = "Downloading...";
+	        	prog.indeterminate = true;
+	        }
+	        
+	        private function onDone(event:DataEvent):void {
+	        	prog.label = "Done!";
+	        	prog.indeterminate = false;
+	        	
+	        	// The roundtrip.php script will Base64 encode the spreadsheet, 
+	        	// so we need to turn it back into a ByteArray
+	        	var dec:Base64Decoder = new Base64Decoder();
+	        	dec.decode(event.data);
+	        	var b:ByteArray = dec.toByteArray();
+	        	
+	        	// Load the Excel file
+	        	xls = new ExcelFile();
+	        	xls.loadFromByteArray(b);
+	        	
+	        	
+	        	// Display the list of sheets
+	        	sheetList.dataProvider = xls.sheets;
+	        	sheetList.selectedIndex = 0;
+	        	
+	       }
+		]]>
+	</mx:Script>
+	<mx:TabBar left="10" right="10" top="10" id="sheetList" labelField="name">
+	</mx:TabBar>
+	
+</mx:Application>

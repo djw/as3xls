@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" creationComplete="onCreate()" viewSourceURL="srcview/index.html">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.CollectionEventKind;
+			import mx.events.CollectionEvent;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.events.DataGridEvent;
+			import com.as3xls.xls.ExcelFile;
+			import com.as3xls.xls.Sheet;
+			
+			[Embed(source='/InterestCalc.xls', mimeType='application/octet-stream')]
+			private var xls:Class;
+			
+			private var sheet:Sheet;
+			private function onCreate():void {
+				// Load the embedded spreadsheet and get the first sheet
+				var excelFile:ExcelFile = new ExcelFile();
+				excelFile.loadFromByteArray(new xls());
+				sheet = excelFile.sheets[0];
+				
+				// Display the sheet in the grid
+				grid.dataProvider = sheet.values;
+				
+				// Initialize the text boxes with the appropriate values
+				txtPrincipal.text = sheet.getCell(0, 1).value;
+				txtInterest.text = sheet.getCell(1, 1).value;
+				txtYears.text = sheet.getCell(2, 1).value;
+				
+			}
+			
+			private function onChange():void {
+				// Get the new values
+				var principal:Number = Number(txtPrincipal.text);
+				var years:Number = Number(txtYears.text);
+				var interest:Number = Number(txtInterest.text);
+				
+				// Update the sheet
+				sheet.setCell(0, 1, principal);
+				sheet.setCell(1, 1, interest);
+				sheet.setCell(2, 1, years);
+				
+				// Let the grid know it should refresh its contents
+				sheet.values.dispatchEvent(new CollectionEvent(CollectionEvent.COLLECTION_CHANGE, false, false, CollectionEventKind.REFRESH));
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Form width="100%">
+		<mx:FormItem label="Principal" width="100%">
+			<mx:TextInput id="txtPrincipal" change="onChange()" width="100%"/>
+		</mx:FormItem>
+		<mx:FormItem label="Interest Rate" width="100%">
+			<mx:TextInput id="txtInterest" change="onChange()" width="100%"/>
+		</mx:FormItem>
+		<mx:FormItem label="Number of Yeras" width="100%">
+			<mx:TextInput id="txtYears" change="onChange()" width="100%"/>
+		</mx:FormItem>
+	</mx:Form>
+	<mx:DataGrid id="grid" 
+		width="100%" 
+		sortableColumns="false"
+		draggableColumns="false" height="100%">
+	</mx:DataGrid>
+</mx:Application>

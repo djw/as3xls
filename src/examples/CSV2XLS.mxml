@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml"
+	layout="absolute" width="300" height="200" 
+	showStatusBar="false" showGripper="false"
+	nativeDragEnter="onDragIn(event)" nativeDragDrop="onDragDrop(event)">
+	<mx:Script>
+		<![CDATA[
+			import com.as3xls.xls.ExcelFile;
+			import com.as3xls.xls.Sheet;
+			import flash.filesystem.FileMode;
+			
+			
+			private function onDragIn(event:NativeDragEvent):void {
+				if(event.clipboard.hasFormat(ClipboardFormats.FILE_LIST_FORMAT)) {
+					NativeDragManager.acceptDragDrop(this);
+				}
+			}
+			
+			private function onDragDrop(event:NativeDragEvent):void {
+				if(event.clipboard.hasFormat(ClipboardFormats.FILE_LIST_FORMAT)) {
+					var files:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
+					for(var n:uint = 0; n < files.length; n++) {
+						convertFile(files[n] as File);
+					}
+				}
+			}
+			
+			
+			private function convertFile(f:File):void {
+				// Load the CSV file
+				var fs:FileStream = new FileStream();
+				fs.open(f, FileMode.READ);
+				var csvFile:String = fs.readUTFBytes(fs.bytesAvailable);
+				fs.close();
+				
+				// Choose the line ending to split the lines based on which one yields more than one line
+				var endings:Array = [File.lineEnding, "\n", "\r"];
+				var i:uint = 1;
+				var lines:Array = csvFile.split(endings[0]);
+				while(lines.length == 1 && i < endings.length) {
+					lines = csvFile.split(endings[i++]);
+				}
+				
+				// Figure out the number of columns and split each line
+				var numCols:uint = 0;
+				for(var n:uint = 0; n < lines.length; n++) {
+					lines[n] = lines[n].split(",");
+					numCols = Math.max(numCols, lines[n].length);
+				}
+				
+				// Set up the Excel sheet and size it appropriately
+				var s:Sheet = new Sheet();
+				s.resize(lines.length, numCols);
+				
+				// Loop over the input array and set each cell to the appropriate value
+				for(var r:uint = 0; r < s.rows; r++) {
+					for(var c:uint = 0; c < s.cols; c++) {
+						s.setCell(r, c, lines[r][c]);
+					}
+				}
+				
+				// Wrap the sheet in an Excel file and write it to disk
+				var xls:ExcelFile = new ExcelFile();
+				xls.sheets.addItem(s);
+				var ba:ByteArray = xls.saveToByteArray();
+				
+				f.nativePath = f.nativePath + ".xls";
+				fs.open(f, FileMode.WRITE);
+				fs.writeBytes(ba);
+				fs.close();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:Label 
+		horizontalCenter="0" verticalCenter="0" fontSize="20"
+		text="Drop CSV Files here"/>
+</mx:WindowedApplication>
