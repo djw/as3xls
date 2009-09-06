@@ -704,12 +704,23 @@ package com.as3xls.xls {
 		private function font2(r:Record, s:Sheet):void { }
 		
 		private function format(r:Record, s:Sheet):void {
-			if(version == BIFFVersion.BIFF4 || version == BIFFVersion.BIFF5) {
+			var index:uint = NaN;
+			if(version == BIFFVersion.BIFF4) {
 				r.data.position += 2;
+			} else if (version == BIFFVersion.BIFF8 || version == BIFFVersion.BIFF5){
+				index = r.data.readUnsignedShort();
 			}
 			
-			var len:uint = r.data.readUnsignedByte();
-			var string:String = r.data.readUTFBytes(len);
+			var string:String;
+			if(version == BIFFVersion.BIFF8){
+				// Stored as 16-bit unicode string
+				string = r.readUnicodeStr16();
+			} else {
+				// Stored as 8-bit ascii string
+				var len:uint = r.data.readUnsignedByte();
+				string = r.data.readUTFBytes(len);
+			}
+			
 			if(s is Sheet) {
 				s.formats.push(string);
 			} else {
