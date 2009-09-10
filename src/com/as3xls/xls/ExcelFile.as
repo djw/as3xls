@@ -722,9 +722,9 @@ package com.as3xls.xls {
 			}
 			
 			if(s is Sheet) {
-				s.formats.push(string);
+				isNaN(index) ? s.formats.push(string) : s.formats[index] = string;
 			} else {
-				globalFormats.push(string);
+				isNaN(index) ? globalFormats.push(string) : globalFormats[index] = string;
 			}
 		}
 		
