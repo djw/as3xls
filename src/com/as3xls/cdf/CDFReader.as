@@ -22,6 +22,7 @@ package com.as3xls.cdf
 	public class CDFReader
 	{
 		private var stream:ByteArray;
+		private var sscs:ByteArray;
 		
 		private var sectorSize:uint;
 		private var sat:Array;
@@ -153,13 +154,21 @@ package com.as3xls.cdf
 				directory.position += 4; // Not used
 				
 				if(entryType == 2 || entryType == 5) {
-					dir.push(new Directory(name, secId, size));
+					dir.push(new Directory(name, secId, size, entryType));
 				}
 			}
-
+			
+			// get the short-stream container stream (sscs)
+			var sscs_dir:Directory = dir[0];
+			if (sscs_dir.type !== 5) throw new Error("Directory entry type error");
+			if (sscs_dir.secId < 0 && sscs_dir.size === 0){
+				sscs = null;
+			} else {
+				sscs = loadStream(sscs_dir.secId);
+			}
+			
 			// build the short-sector allocation table (ssat)
 			ssat = [];
-			var sscs_dir:Directory = dir[0];
 			if (shortSecSATSize > 0 && sscs_dir.size === 0) {
 				throw new Error("Inconsistency: SSCS size is 0 but SSAT size is non-zero");
 			}
