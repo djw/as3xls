@@ -144,7 +144,7 @@ package com.as3xls.cdf
 				var size:uint = directory.readUnsignedInt();
 				directory.position += 4; // Not used
 				
-				if(entryType == 2) {
+				if(entryType == 2 || entryType == 5) {
 					dir.push({name: name, secId: secId});
 				}
 			}
