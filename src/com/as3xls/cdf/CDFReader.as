@@ -25,10 +25,13 @@ package com.as3xls.cdf
 		private var sscs:ByteArray;
 		
 		private var sectorSize:uint;
+		private var shortSectorSize:uint;
+		private var minStreamSize:uint;
+
 		private var sat:Array;
 		private var ssat:Array;
+		
 		public var dir:Array;
-		private var minStreamSize:uint;
 		
 		/**
 		 * Determines whether a ByteArray contains a CDF file by checking for the presence of the CDF magic value.
@@ -79,7 +82,7 @@ package com.as3xls.cdf
 			if (d.size > minStreamSize){
 				data = loadStream(d.secId);
 			} else {
-				throw new Error("Short Streams Unsupported");
+				data = loadShortStream(d.secId);
 			}
 			return data;
 		}
@@ -97,7 +100,7 @@ package com.as3xls.cdf
 			var version:uint = stream.readUnsignedShort();
 			var endianness:uint = stream.readUnsignedShort();
 			sectorSize = Math.pow(2, stream.readUnsignedShort());
-			var shortSectorSize:uint = Math.pow(2, stream.readUnsignedShort());
+			shortSectorSize = Math.pow(2, stream.readUnsignedShort());
 			stream.position += 10; // Not used
 			var sectorsInSAT:uint = stream.readUnsignedInt();
 			var dirStreamSecID:int = stream.readInt();
@@ -208,6 +211,20 @@ package com.as3xls.cdf
 		 */
 		private function sectorOffset(secId:uint):uint {
 			return 512 + secId * sectorSize;
+		}
+		
+		private function loadShortStream(startSecID:uint):ByteArray {
+			var ret:ByteArray = new ByteArray();
+			ret.endian = Endian.LITTLE_ENDIAN;
+			var secId:int = startSecID;
+			var offset:uint = 0;
+			while(secId >= 0) {
+				sscs.position = secId*shortSectorSize;
+				sscs.readBytes(ret, offset, shortSectorSize);
+				offset += shortSectorSize;
+				secId = ssat[secId];
+			}
+			return ret;
 		}
 	}
 }
