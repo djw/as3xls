@@ -25,6 +25,7 @@ package com.as3xls.cdf
 		
 		private var sectorSize:uint;
 		private var sat:Array;
+		private var ssat:Array;
 		public var dir:Array;
 		
 		
@@ -145,7 +146,20 @@ package com.as3xls.cdf
 				directory.position += 4; // Not used
 				
 				if(entryType == 2 || entryType == 5) {
-					dir.push(new Directory(name, secId));
+					dir.push(new Directory(name, secId, size));
+				}
+			}
+
+			// build the short-sector allocation table (ssat)
+			ssat = [];
+			var sscs_dir:Directory = dir[0];
+			if (shortSecSATSize > 0 && sscs_dir.size === 0) {
+				throw new Error("Inconsistency: SSCS size is 0 but SSAT size is non-zero");
+			}
+			if (sscs_dir.size > 0) {
+				var ba:ByteArray = loadStream(shortSecSATSecID);
+				for (i = 0; i < ba.length/4; i++){
+					ssat.push(ba.readInt());
 				}
 			}
 		}
