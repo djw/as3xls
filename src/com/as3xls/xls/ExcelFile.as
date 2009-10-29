@@ -288,7 +288,7 @@ package com.as3xls.xls {
 			// Newer workbooks are actually cdf files which must be extracted
 			if(CDFReader.isCDFFile(xls)) {
 				var cdf:CDFReader = new CDFReader(xls);
-				xls = cdf.loadDirectoryEntry(0);
+				xls = cdf.loadDirectoryEntry(1);
 			}
 			
 			br = new BIFFReader(xls);
