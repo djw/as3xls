@@ -27,7 +27,7 @@ package com.as3xls.cdf
 		private var sat:Array;
 		private var ssat:Array;
 		public var dir:Array;
-		
+		private var minStreamSize:uint;
 		
 		/**
 		 * Determines whether a ByteArray contains a CDF file by checking for the presence of the CDF magic value.
@@ -73,7 +73,14 @@ package com.as3xls.cdf
 		 * 
 		 */
 		public function loadDirectoryEntry(dirId:uint):ByteArray {
-			return loadStream(dir[dirId].secId);
+			var d:Directory = dir[dirId];
+			var data:ByteArray;
+			if (d.size > minStreamSize){
+				data = loadStream(d.secId);
+			} else {
+				throw new Error("Short Streams Unsupported");
+			}
+			return data;
 		}
 		
 		
@@ -94,7 +101,7 @@ package com.as3xls.cdf
 			var sectorsInSAT:uint = stream.readUnsignedInt();
 			var dirStreamSecID:int = stream.readInt();
 			stream.position += 4; // Not used
-			var minStreamSize:uint = stream.readUnsignedInt();
+			minStreamSize = stream.readUnsignedInt();
 			var shortSecSATSecID:int = stream.readInt();
 			var shortSecSATSize:uint = stream.readUnsignedInt();
 			var msatSecID:int = stream.readInt();
