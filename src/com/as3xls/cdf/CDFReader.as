@@ -161,8 +161,7 @@ package com.as3xls.cdf
 			ret.endian = Endian.LITTLE_ENDIAN;
 			var secId:int = startSecID;
 			var offset:uint = 0;
-			
-			while(secId != -2) {
+			while(secId >= 0) {
 				stream.position = sectorOffset(secId);
 				stream.readBytes(ret, offset, sectorSize);
 				offset += sectorSize;
