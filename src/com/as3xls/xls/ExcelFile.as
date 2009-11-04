@@ -590,14 +590,18 @@ package com.as3xls.xls {
 		
 		
 		
-		// Setup		
+		// Setup
 		
 		private function sst(r:Record, s:Sheet):void {
-			var numWorkbookStrings:uint = r.data.readUnsignedInt();
-			var sstSize:uint = r.data.readUnsignedInt();
-			
-			_sst = new Array();
-			for(var n:uint = 0; n < sstSize; n++) {
+			if (_sst == null)
+			{
+				_sst = new Array();
+				var numWorkbookStrings:uint = r.data.readUnsignedInt();
+				var sstSize:uint = r.data.readUnsignedInt();
+			}
+			//otherwise we are continuing from a previous sst record and don't need to read these ints in again
+			while (r.data.bytesAvailable > 0)
+			{
 				var str:String = r.readUnicodeStr16();
 				_sst.push(str);
 			}
@@ -1097,6 +1101,9 @@ package com.as3xls.xls {
 					var flags:uint = r.data.readUnsignedByte();
 					var note:String = r.data.readUTFBytes(r.data.bytesAvailable);
 					notes.push(note);
+					break;
+				case Type.SST:
+					(handlers[lastRecordType] as Function).call(this, r, s);
 					break;
 				default:
 					break;
