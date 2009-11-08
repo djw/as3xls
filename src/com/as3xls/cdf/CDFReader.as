@@ -79,7 +79,7 @@ package com.as3xls.cdf
 		public function loadDirectoryEntry(dirId:uint):ByteArray {
 			var d:Directory = dir[dirId];
 			var data:ByteArray;
-			if (d.size > minStreamSize){
+			if (d.size >= minStreamSize){
 				data = loadStream(d.secId);
 			} else {
 				data = loadShortStream(d.secId);
