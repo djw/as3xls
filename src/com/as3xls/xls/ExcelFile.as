@@ -628,14 +628,15 @@ package com.as3xls.xls {
 			var visibility:uint = r.data.readUnsignedByte();
 			var sheetType:uint = r.data.readUnsignedByte();
 			
-			var len:uint;
-			if(version == BIFFVersion.BIFF5) {
-				len = r.data.readUnsignedByte();
+			var name:String;
+			if(version == BIFFVersion.BIFF8){
+				// Stored as 16-bit unicode string
+				name = r.readUnicodeStr16();
 			} else {
-				len = r.data.readUnsignedShort();
+				// Stored as 8-bit ascii string
+				var len:uint = r.data.readUnsignedByte();
+				name = r.data.readUTFBytes(len);
 			}
-			var name:String = r.data.readUTFBytes(len);
-			
 			
 			var currentSheet:Sheet;
 			currentSheet = new Sheet();
