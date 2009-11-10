@@ -48,11 +48,13 @@ package com.as3xls.xls {
 			// Add needed columns
 			for(var row:uint = 0; row < _values.length; row++) {
 				for(var col:uint = 0; col < _cols; col++) {
-					_values[row][col] = new Cell();
-					_values[row][col].dateMode = _dateMode;
+					if(!(_values[row][col] is Cell)) {
+						_values[row][col] = new Cell();
+						_values[row][col].dateMode = _dateMode;
+					}
 				}
 			}
-		}		
+		}
 
 		/**
 		 * Gets the cell object at the given location 
@@ -79,8 +81,8 @@ package com.as3xls.xls {
 		 * 
 		 */
 		public function setCell(row:uint, col:uint, value:*):void {
-			if(!(_values[row][col] is Cell)) {
-				_values[row][col] = new Cell();
+			if ((row+1) > _rows || (col+1) > _cols) {
+				resize(row+1, col+1);
 			}
 
 			if(value is Formula) {
