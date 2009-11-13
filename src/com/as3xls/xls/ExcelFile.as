@@ -660,8 +660,6 @@ package com.as3xls.xls {
 					_currData = dataArr[_currIndex];
 					var new_opts:uint = _currData.readByte();
 					compressed = (new_opts & 0x01) == 0;
-					asianPhonetic = (new_opts & 0x04) == 0x04;
-					richtext = (new_opts & 0x08) == 0x08;
 				}
 				_currData.position += toSkip;
 				if (_currData.position >= _currData.length) {
