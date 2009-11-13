@@ -42,6 +42,14 @@ package com.as3xls.biff {
 			var asianPhonetic:Boolean = (opts & 0x04) == 0x04;
 			var richtext:Boolean = (opts & 0x08) == 0x08;
 			
+			// We need to skip past these if they're present
+			if (richtext) {
+				_data.position += 2;
+			}
+			if (asianPhonetic) {
+				_data.position += 4;
+			}
+			
 			var _strArray:Array = [];
 			var i:uint;
 			if (compressed) {
