@@ -5,7 +5,7 @@ package com.as3xls.biff {
 	 * Used to make reading BIFF files a little less painful.
 	 */
 	public class BIFFReader {
-		private var stream:ByteArray;
+		public var stream:ByteArray;
 		private var _tags:Array;
 		
 		

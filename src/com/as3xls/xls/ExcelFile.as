@@ -590,16 +590,101 @@ package com.as3xls.xls {
 		
 		
 		
-		// Setup		
+		// Setup
 		
 		private function sst(r:Record, s:Sheet):void {
 			var numWorkbookStrings:uint = r.data.readUnsignedInt();
 			var sstSize:uint = r.data.readUnsignedInt();
+			var dataArr:Array = [r.data];
+			while(true){
+				var d:ByteArray = get_continuation_data();
+				if (!d) {
+					break;
+				} else {
+					dataArr.push(d);
+				}
+			}
+			_sst = unpack_sst(dataArr, sstSize);
+		}
+		
+		private function unpack_sst(dataArr:Array, sstSize:uint):Array {
+			var _currIndex:uint = 0;
+			var _currData:ByteArray = dataArr[_currIndex];
 			
-			_sst = new Array();
+			// Now unpack
+			var _strings:Array = new Array();
 			for(var n:uint = 0; n < sstSize; n++) {
-				var str:String = r.readUnicodeStr16();
-				_sst.push(str);
+				// this is very much like readUnicodeStr16(), except it deals with continuations
+				var len:uint = _currData.readUnsignedShort();
+				var opts:uint = _currData.readByte();
+				var compressed:Boolean = (opts & 0x01) == 0;
+				var asianPhonetic:Boolean = (opts & 0x04) == 0x04;
+				var richtext:Boolean = (opts & 0x08) == 0x08;
+				var toSkip:uint = 0;
+				// We need to skip past these if they're present
+				if (richtext) {
+					toSkip += 4 * _currData.readShort();
+				}
+				if (asianPhonetic) {
+					toSkip += _currData.readUnsignedInt();
+				}
+				
+				var fullString:String = "";
+				var charsGot:uint = 0;
+				while (true) {
+					var charsNeed:uint = len - charsGot;
+					var charsAvail:uint;
+					var _strArray:Array = [];
+					var i:uint;
+					if (compressed) {
+						// This is compressed UTF-16, not UTF-8, so we don't use readUTFBytes()
+						charsAvail = charsNeed > _currData.bytesAvailable ? _currData.bytesAvailable : charsNeed;
+						for (i = 0; i < charsAvail; i++){
+							_strArray.push(_currData.readUnsignedByte());
+						}
+					} else {
+						// Treating string as UCS-2, rather than UTF-16 (i.e. ignoring surrogate pairs)
+						// readMultiByte() claims to do this, but doesn't seem to work...
+						charsAvail = charsNeed > (_currData.bytesAvailable/2) ? (_currData.bytesAvailable/2) : charsNeed;
+						for (i = 0; i < charsAvail; i++){
+							_strArray.push(_currData.readUnsignedShort());
+						}
+					}
+					var partialString:String = String.fromCharCode.apply(null, _strArray);
+					fullString += partialString;
+					charsGot += charsAvail;
+					if (charsGot == len) {
+						break;
+					}
+					_currIndex += 1;
+					_currData = dataArr[_currIndex];
+					var new_opts:uint = _currData.readByte();
+					compressed = (new_opts & 0x01) == 0;
+					asianPhonetic = (new_opts & 0x04) == 0x04;
+					richtext = (new_opts & 0x08) == 0x08;
+				}
+				_currData.position += toSkip;
+				if (_currData.position >= _currData.length) {
+					_currIndex += 1;
+					if (_currIndex < dataArr.length){
+						_currData = dataArr[_currIndex];
+					}
+				}
+				_strings.push(fullString);
+			}
+			return _strings;
+		}
+		
+		private function get_continuation_data():ByteArray {
+//			trace("Getting continuation data");
+			var ba:ByteArray;
+			var pos:uint = br.stream.position;
+			var r:Record = br.readTag();
+			if (r.type != Type.CONTINUE){
+				br.stream.position = pos;
+				return null;
+			} else {
+				return r.data;
 			}
 		}
 		
