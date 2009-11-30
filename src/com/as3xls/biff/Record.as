@@ -35,8 +35,13 @@ package com.as3xls.biff {
 		 * 
 		 *  @return A unicode string with 2 byte length read from the _data ByteArray's current position.
 		 */
-		public function readUnicodeStr16():String {
-			var len:uint = _data.readUnsignedShort();
+		public function readUnicodeStr16(shortLen:Boolean = false):String {
+			var len:uint;
+			if (shortLen) {
+				len = _data.readUnsignedByte();
+			} else {
+				len = _data.readUnsignedShort();
+			}
 			var opts:uint = _data.readByte();
 			var compressed:Boolean = (opts & 0x01) == 0;
 			var asianPhonetic:Boolean = (opts & 0x04) == 0x04;

@@ -710,13 +710,12 @@ package com.as3xls.xls {
 			var name:String;
 			if(version == BIFFVersion.BIFF8){
 				// Stored as 16-bit unicode string
-				name = r.readUnicodeStr16();
+				name = r.readUnicodeStr16(true);
 			} else {
 				// Stored as 8-bit ascii string
 				var len:uint = r.data.readUnsignedByte();
 				name = r.data.readUTFBytes(len);
 			}
-			
 			var currentSheet:Sheet;
 			currentSheet = new Sheet();
 			currentSheet.dateMode = dateMode;
