@@ -68,6 +68,8 @@ package com.as3xls.xls {
 		 * 
 		 */
 		public static function isDate(fmt:String):Boolean {
+			if (!fmt) { return false; }
+			
 			var state:uint = 0;
 			var s:String = "";
 			var c:String;
