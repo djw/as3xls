@@ -306,13 +306,21 @@ package com.as3xls.xls {
 				}
 				
 				if(handlers[r.type] is Function) {
+					if (version==BIFFVersion.BIFF2) {		
+						if (!currentSheet){
+							currentSheet = new Sheet();
+							currentSheet.name = 'test';
+						} 
+					}
 					(handlers[r.type] as Function).call(this, r, currentSheet);
 				} else {
 					unknown.push(r.type);
 				}
 				
 			}
-			
+			if (version==BIFFVersion.BIFF2) {
+				_sheets.addItem(currentSheet);
+			}
 			if(unknown.length > 0) {
 				//throw new Error("Unsupported BIFF records: " + unknown.join(", "));
 			}
@@ -392,12 +400,16 @@ package com.as3xls.xls {
 			}
 			
 			var value:String = r.data.readUTFBytes(len);
-			var fmt:String = s.formats[s.xformats[indexToXF].format];
-			if(fmt == null || fmt.length == 0) {
-				fmt = Formatter.builtInFormats[s.xformats[indexToXF].format];
-			}
+			
 			s.setCell(row, col, value);
-			s.getCell(row, col).format = fmt;
+			
+			if(version != BIFFVersion.BIFF2) {
+				var fmt:String = s.formats[s.xformats[indexToXF].format];
+				if(fmt == null || fmt.length == 0) {
+					fmt = Formatter.builtInFormats[s.xformats[indexToXF].format];
+				}
+				s.getCell(row, col).format = fmt;
+			}
 		}
 		
 		private function labelsst(r:Record, s:Sheet):void {
@@ -698,8 +710,9 @@ package com.as3xls.xls {
 			var lastRow:uint = r.length == 14 ? r.data.readUnsignedInt() : r.data.readUnsignedShort();
 			var firstCol:uint = r.data.readUnsignedShort();
 			var lastCol:uint = r.data.readUnsignedShort();
-			
-			s.resize(lastRow, lastCol);
+			if (s) {
+				s.resize(lastRow, lastCol);
+			}
 		}
 		
 		private function boundsheet(r:Record, s:Sheet):void {
@@ -716,13 +729,13 @@ package com.as3xls.xls {
 				var len:uint = r.data.readUnsignedByte();
 				name = r.data.readUTFBytes(len);
 			}
-			var currentSheet:Sheet;
-			currentSheet = new Sheet();
-			currentSheet.dateMode = dateMode;
-			currentSheet.name = name;
-			currentSheet.formats = currentSheet.formats.concat(globalFormats);
-			currentSheet.xformats = currentSheet.xformats.concat(globalXFormats);
-			_sheets.addItem(currentSheet);
+			var l_currentSheet:Sheet;
+			l_currentSheet = new Sheet();
+			l_currentSheet.dateMode = dateMode;
+			l_currentSheet.name = name;
+			l_currentSheet.formats = currentSheet.formats.concat(globalFormats);
+			l_currentSheet.xformats = currentSheet.xformats.concat(globalXFormats);
+			_sheets.addItem(l_currentSheet);
 		}
 		
 		// Formatting
@@ -887,7 +900,7 @@ package com.as3xls.xls {
 				currentSheetIdx++;
 			}
 			if(r.type == 0x9) {
-				this.version = BIFFVersion.BIFF2
+				this.version = BIFFVersion.BIFF2;
 			} else if(r.type == 0x209) {
 				this.version = BIFFVersion.BIFF3;
 			} else if(r.type == 0x409) {
