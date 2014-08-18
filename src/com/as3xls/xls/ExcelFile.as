@@ -489,22 +489,27 @@ package com.as3xls.xls {
 		}
 		
 		private function readRK(r:Record, s:Sheet):Number {
-			var raw:uint = r.data.readUnsignedInt();
+			var raw:uint = r.data.readUnsignedInt();	// Read 4 bytes to get flags 
 			var div100:Boolean = (raw & 0x00000001) == 1
 			var intVal:Boolean = (raw & 0x00000002) == 2;
 			
-			r.data.position -= 4;
+			r.data.position -= 4;	// Rewind to read those 4 bytes again 
 			
 			var value:Number;
 			if(intVal) {
 				value = r.data.readInt() >> 2;
 			} else {
+				
+				/* See
+					http://www.gaia-gis.it/gaia-sins/freexl-1.0.0e-doxy-doc/Format.html
+					http://www.digitalpreservation.gov/formats/digformatspecs/Excel97-2007BinaryFileFormat(xls)Specification.pdf
+				*/				
 				var b:ByteArray = new ByteArray();
 				b[7] = 0;
 				b[6] = 0;
 				b[5] = 0;
 				b[4] = 0;
-				b[3] = r.data.readUnsignedByte();
+				b[3] = r.data.readUnsignedByte() & 0xFC; // Masking of bits 30 and 31 missing in original implementation
 				b[2] = r.data.readUnsignedByte();
 				b[1] = r.data.readUnsignedByte();
 				b[0] = r.data.readUnsignedByte();
@@ -512,7 +517,7 @@ package com.as3xls.xls {
 			}
 			
 			if(div100) {
-				value = Math.round(value) / 100;
+				value = value / 100; // Original code (wrong): Math.round(value) / 100;
 			}
 			
 			return value;
